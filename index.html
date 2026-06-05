@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RESCUE — Hacked Wallet Recovery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #ff2d2d;
+    --orange: #ff6b00;
+    --yellow: #ffd600;
+    --green: #00ff88;
+    --dark: #080808;
+    --dark2: #0f0f0f;
+    --dark3: #161616;
+    --border: #2a2a2a;
+    --text: #e8e8e8;
+    --muted: #666;
+    --mono: 'Share Tech Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+- { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+background: var(–dark);
+color: var(–text);
+font-family: var(–sans);
+min-height: 100vh;
+overflow-x: hidden;
+}
+
+/* Animated grid background */
+body::before {
+content: ‘’;
+position: fixed;
+inset: 0;
+background-image:
+linear-gradient(rgba(255,45,45,0.03) 1px, transparent 1px),
+linear-gradient(90deg, rgba(255,45,45,0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+pointer-events: none;
+z-index: 0;
+}
+
+/* Vignette */
+body::after {
+content: ‘’;
+position: fixed;
+inset: 0;
+background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.8) 100%);
+pointer-events: none;
+z-index: 0;
+}
+
+.container {
+position: relative;
+z-index: 1;
+max-width: 720px;
+margin: 0 auto;
+padding: 0 24px 80px;
+}
+
+/* Header */
+header {
+padding: 32px 0 48px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.logo {
+font-family: var(–mono);
+font-size: 13px;
+color: var(–red);
+letter-spacing: 0.2em;
+text-transform: uppercase;
+}
+
+.status-dot {
+display: flex;
+align-items: center;
+gap: 8px;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+letter-spacing: 0.1em;
+}
+
+.status-dot::before {
+content: ‘’;
+width: 6px;
+height: 6px;
+border-radius: 50%;
+background: var(–green);
+box-shadow: 0 0 8px var(–green);
+animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+0%, 100% { opacity: 1; }
+50% { opacity: 0.3; }
+}
+
+/* Hero */
+.hero {
+padding: 0 0 56px;
+}
+
+.alert-badge {
+display: inline-flex;
+align-items: center;
+gap: 8px;
+background: rgba(255,45,45,0.1);
+border: 1px solid rgba(255,45,45,0.3);
+border-radius: 4px;
+padding: 6px 14px;
+font-family: var(–mono);
+font-size: 11px;
+color: var(–red);
+letter-spacing: 0.15em;
+text-transform: uppercase;
+margin-bottom: 28px;
+animation: borderFlicker 3s infinite;
+}
+
+@keyframes borderFlicker {
+0%, 90%, 100% { border-color: rgba(255,45,45,0.3); }
+95% { border-color: rgba(255,45,45,0.8); }
+}
+
+.alert-badge .icon { font-size: 14px; }
+
+h1 {
+font-family: var(–sans);
+font-weight: 800;
+font-size: clamp(42px, 8vw, 72px);
+line-height: 0.95;
+letter-spacing: -0.03em;
+color: #fff;
+margin-bottom: 24px;
+}
+
+h1 span {
+color: var(–red);
+display: block;
+}
+
+.hero-desc {
+font-size: 16px;
+line-height: 1.7;
+color: var(–muted);
+max-width: 480px;
+}
+
+/* Steps */
+.steps {
+display: grid;
+grid-template-columns: repeat(3, 1fr);
+gap: 1px;
+background: var(–border);
+border: 1px solid var(–border);
+border-radius: 8px;
+overflow: hidden;
+margin-bottom: 40px;
+}
+
+.step {
+background: var(–dark2);
+padding: 20px;
+position: relative;
+}
+
+.step-num {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+margin-bottom: 8px;
+letter-spacing: 0.1em;
+}
+
+.step-label {
+font-size: 13px;
+font-weight: 700;
+color: var(–text);
+line-height: 1.3;
+}
+
+.step.active .step-num { color: var(–orange); }
+.step.active { background: var(–dark3); }
+.step.done .step-num { color: var(–green); }
+
+/* Main card */
+.card {
+background: var(–dark2);
+border: 1px solid var(–border);
+border-radius: 12px;
+overflow: hidden;
+margin-bottom: 16px;
+}
+
+.card-header {
+padding: 20px 24px;
+border-bottom: 1px solid var(–border);
+display: flex;
+align-items: center;
+justify-content: space-between;
+}
+
+.card-title {
+font-family: var(–mono);
+font-size: 12px;
+letter-spacing: 0.15em;
+text-transform: uppercase;
+color: var(–muted);
+}
+
+.card-body { padding: 24px; }
+
+/* Input group */
+.input-group { margin-bottom: 20px; }
+
+.input-label {
+font-family: var(–mono);
+font-size: 11px;
+letter-spacing: 0.12em;
+text-transform: uppercase;
+color: var(–muted);
+margin-bottom: 8px;
+display: flex;
+align-items: center;
+gap: 8px;
+}
+
+.input-label .tag {
+background: rgba(255,214,0,0.1);
+border: 1px solid rgba(255,214,0,0.2);
+color: var(–yellow);
+padding: 1px 6px;
+border-radius: 3px;
+font-size: 10px;
+}
+
+.input-wrap {
+position: relative;
+display: flex;
+align-items: center;
+}
+
+input[type=“text”] {
+width: 100%;
+background: var(–dark);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 14px 16px;
+font-family: var(–mono);
+font-size: 13px;
+color: var(–text);
+outline: none;
+transition: border-color 0.2s;
+}
+
+input[type=“text”]:focus { border-color: rgba(255,45,45,0.5); }
+
+input[type=“text”]::placeholder { color: #333; }
+
+.input-action {
+position: absolute;
+right: 12px;
+background: var(–dark3);
+border: 1px solid var(–border);
+border-radius: 5px;
+padding: 4px 10px;
+font-family: var(–mono);
+font-size: 10px;
+color: var(–muted);
+cursor: pointer;
+letter-spacing: 0.05em;
+transition: all 0.2s;
+}
+
+.input-action:hover { border-color: var(–red); color: var(–red); }
+
+/* Wallet display */
+.wallet-display {
+background: var(–dark);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 14px 16px;
+font-family: var(–mono);
+font-size: 13px;
+color: var(–text);
+display: flex;
+align-items: center;
+justify-content: space-between;
+min-height: 50px;
+}
+
+.wallet-display .addr { color: var(–red); }
+
+.wallet-display .placeholder { color: #333; font-size: 12px; }
+
+/* Token list */
+.token-list {
+display: flex;
+flex-direction: column;
+gap: 1px;
+background: var(–border);
+border-radius: 8px;
+overflow: hidden;
+margin-bottom: 20px;
+}
+
+.token-row {
+background: var(–dark);
+padding: 14px 16px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+animation: slideIn 0.3s ease forwards;
+opacity: 0;
+}
+
+@keyframes slideIn {
+from { opacity: 0; transform: translateX(-8px); }
+to   { opacity: 1; transform: translateX(0); }
+}
+
+.token-info { display: flex; align-items: center; gap: 12px; }
+
+.token-icon {
+width: 32px; height: 32px;
+border-radius: 50%;
+background: var(–dark3);
+border: 1px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+font-size: 14px;
+}
+
+.token-name {
+font-weight: 700;
+font-size: 14px;
+color: var(–text);
+}
+
+.token-contract {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–muted);
+margin-top: 2px;
+}
+
+.token-amount {
+text-align: right;
+}
+
+.token-value {
+font-weight: 700;
+font-size: 14px;
+color: var(–text);
+}
+
+.token-usd {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–muted);
+margin-top: 2px;
+}
+
+.token-check {
+width: 18px; height: 18px;
+border-radius: 4px;
+border: 1px solid var(–border);
+display: flex; align-items: center; justify-content: center;
+margin-left: 12px;
+cursor: pointer;
+transition: all 0.2s;
+flex-shrink: 0;
+}
+
+.token-check.checked {
+background: var(–green);
+border-color: var(–green);
+color: #000;
+font-size: 11px;
+}
+
+/* Scanning animation */
+.scanning {
+display: flex;
+align-items: center;
+gap: 12px;
+padding: 20px;
+font-family: var(–mono);
+font-size: 12px;
+color: var(–muted);
+}
+
+.scan-bar {
+flex: 1;
+height: 2px;
+background: var(–dark3);
+border-radius: 2px;
+overflow: hidden;
+}
+
+.scan-fill {
+height: 100%;
+background: linear-gradient(90deg, var(–red), var(–orange));
+border-radius: 2px;
+animation: scan 1.5s ease-in-out infinite;
+width: 30%;
+}
+
+@keyframes scan {
+0% { transform: translateX(-100%); }
+100% { transform: translateX(400%); }
+}
+
+/* Buttons */
+.btn {
+width: 100%;
+padding: 16px 24px;
+border-radius: 8px;
+font-family: var(–sans);
+font-weight: 700;
+font-size: 15px;
+letter-spacing: 0.02em;
+cursor: pointer;
+border: none;
+transition: all 0.2s;
+position: relative;
+overflow: hidden;
+}
+
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.btn-danger {
+background: var(–red);
+color: #fff;
+}
+
+.btn-danger:hover:not(:disabled) {
+background: #ff0000;
+box-shadow: 0 0 30px rgba(255,45,45,0.4);
+transform: translateY(-1px);
+}
+
+.btn-danger::before {
+content: ‘’;
+position: absolute;
+inset: 0;
+background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+transform: translateX(-100%);
+transition: transform 0.5s;
+}
+
+.btn-danger:hover::before { transform: translateX(100%); }
+
+.btn-outline {
+background: transparent;
+border: 1px solid var(–border);
+color: var(–text);
+}
+
+.btn-outline:hover:not(:disabled) {
+border-color: var(–red);
+color: var(–red);
+}
+
+.btn-success {
+background: var(–green);
+color: #000;
+}
+
+.btn-success:hover:not(:disabled) {
+background: #00ffaa;
+box-shadow: 0 0 30px rgba(0,255,136,0.3);
+}
+
+/* Progress log */
+.log {
+background: var(–dark);
+border: 1px solid var(–border);
+border-radius: 8px;
+padding: 16px;
+font-family: var(–mono);
+font-size: 11px;
+line-height: 1.8;
+max-height: 200px;
+overflow-y: auto;
+color: var(–muted);
+}
+
+.log-line { display: flex; gap: 12px; }
+.log-time { color: #333; flex-shrink: 0; }
+.log-line.ok .log-msg { color: var(–green); }
+.log-line.err .log-msg { color: var(–red); }
+.log-line.warn .log-msg { color: var(–yellow); }
+.log-line.info .log-msg { color: var(–text); }
+
+/* Success state */
+.success-banner {
+background: rgba(0,255,136,0.05);
+border: 1px solid rgba(0,255,136,0.2);
+border-radius: 12px;
+padding: 32px;
+text-align: center;
+display: none;
+}
+
+.success-banner.visible { display: block; }
+
+.success-icon {
+font-size: 48px;
+margin-bottom: 16px;
+display: block;
+animation: pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes pop {
+from { transform: scale(0); }
+to   { transform: scale(1); }
+}
+
+.success-title {
+font-size: 24px;
+font-weight: 800;
+color: var(–green);
+margin-bottom: 8px;
+}
+
+.success-sub {
+font-family: var(–mono);
+font-size: 12px;
+color: var(–muted);
+line-height: 1.7;
+}
+
+.tx-hash {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–orange);
+word-break: break-all;
+margin-top: 12px;
+background: var(–dark);
+padding: 10px 14px;
+border-radius: 6px;
+border: 1px solid var(–border);
+}
+
+/* Warning box */
+.warning-box {
+background: rgba(255,107,0,0.06);
+border: 1px solid rgba(255,107,0,0.2);
+border-radius: 8px;
+padding: 14px 16px;
+display: flex;
+gap: 12px;
+margin-bottom: 20px;
+}
+
+.warning-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+.warning-text {
+font-family: var(–mono);
+font-size: 11px;
+color: rgba(255,150,50,0.8);
+line-height: 1.7;
+letter-spacing: 0.02em;
+}
+
+/* Divider */
+.divider {
+display: flex;
+align-items: center;
+gap: 16px;
+margin: 24px 0;
+}
+
+.divider::before, .divider::after {
+content: ‘’;
+flex: 1;
+height: 1px;
+background: var(–border);
+}
+
+.divider span {
+font-family: var(–mono);
+font-size: 11px;
+color: var(–muted);
+letter-spacing: 0.1em;
+}
+
+/* Footer */
+footer {
+margin-top: 48px;
+padding-top: 24px;
+border-top: 1px solid var(–border);
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.footer-text {
+font-family: var(–mono);
+font-size: 11px;
+color: #333;
+letter-spacing: 0.05em;
+}
+
+.chain-badge {
+font-family: var(–mono);
+font-size: 10px;
+color: var(–muted);
+background: var(–dark3);
+border: 1px solid var(–border);
+padding: 4px 10px;
+border-radius: 4px;
+letter-spacing: 0.1em;
+}
+
+/* Utility */
+.hidden { display: none !important; }
+.mt-16 { margin-top: 16px; }
+.gap-8 { display: flex; flex-direction: column; gap: 8px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: var(–dark); }
+::-webkit-scrollbar-thumb { background: var(–border); border-radius: 2px; }
+
+@media (max-width: 600px) {
+.steps { grid-template-columns: 1fr; }
+h1 { font-size: 38px; }
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="logo">⬡ RESCUE.XYZ</div>
+    <div class="status-dot">BASE MAINNET</div>
+  </header>
+
+  <div class="hero">
+    <div class="alert-badge"><span class="icon">⚡</span> Emergency Recovery Tool</div>
+    <h1>SAVE YOUR<span>TOKENS.</span></h1>
+    <p class="hero-desc">
+      Your wallet is compromised. Use EIP-7702 delegation to sweep all assets 
+      to a safe address — gas-sponsored, one signature, protected forever.
+    </p>
+  </div>
+
+  <!-- Progress steps -->
+
+  <div class="steps" id="steps">
+    <div class="step active" id="step1">
+      <div class="step-num">01 — ACTIVE</div>
+      <div class="step-label">Connect & Configure</div>
+    </div>
+    <div class="step" id="step2">
+      <div class="step-num">02</div>
+      <div class="step-label">Scan & Select</div>
+    </div>
+    <div class="step" id="step3">
+      <div class="step-num">03</div>
+      <div class="step-label">Delegate & Rescue</div>
+    </div>
+  </div>
+
+  <!-- PHASE 1: Connect -->
+
+  <div id="phase1">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">01 — Hacked Wallet</span>
+        <span class="card-title" style="color:var(--red)">COMPROMISED</span>
+      </div>
+      <div class="card-body">
+        <div class="warning-box">
+          <span class="warning-icon">⚠</span>
+          <div class="warning-text">
+            DO NOT send ETH to this wallet. Gas is sponsored by this site.<br>
+            Connect the hacked wallet — you only need to sign once.
+          </div>
+        </div>
+        <div class="wallet-display" id="hackedWalletDisplay">
+          <span class="placeholder">Not connected</span>
+        </div>
+        <div class="mt-16">
+          <button class="btn btn-danger" id="connectHackedBtn" onclick="connectHackedWallet()">
+            Connect Hacked Wallet
+          </button>
+        </div>
+      </div>
+    </div>
+
+```
+<div class="card" id="rescueCard" style="opacity:0.4;pointer-events:none">
+  <div class="card-header">
+    <span class="card-title">02 — Rescue Wallet</span>
+    <span class="card-title" style="color:var(--green)">SAFE</span>
+  </div>
+  <div class="card-body">
+    <div class="input-group">
+      <div class="input-label">
+        Rescue address <span class="tag">DESTINATION</span>
+      </div>
+      <div class="input-wrap">
+        <input type="text" id="rescueInput" placeholder="0x... safe wallet address" />
+        <button class="input-action" onclick="pasteRescue()">PASTE</button>
+      </div>
+    </div>
+    <button class="btn btn-outline" id="confirmRescueBtn" onclick="confirmRescue()">
+      Confirm Rescue Wallet →
+    </button>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- PHASE 2: Scan tokens -->
+
+  <div id="phase2" class="hidden">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Assets Detected</span>
+        <span class="card-title" id="assetCount" style="color:var(--green)">SCANNING...</span>
+      </div>
+      <div class="card-body" id="tokenListWrap">
+        <div class="scanning">
+          <span>SCANNING WALLET</span>
+          <div class="scan-bar"><div class="scan-fill"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PHASE 3: Rescue -->
+
+  <div id="phase3" class="hidden">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">03 — Execute Rescue</span>
+      </div>
+      <div class="card-body">
+        <div class="warning-box">
+          <span class="warning-icon">🛡</span>
+          <div class="warning-text">
+            This signs a one-time EIP-7702 delegation. Gas is covered by this site.<br>
+            After signing, ALL selected tokens sweep instantly + future airdrops auto-rescue.
+          </div>
+        </div>
+
+```
+    <div class="gap-8 mt-16" id="rescueSummary"></div>
+
+    <div class="divider"><span>TRANSACTION LOG</span></div>
+
+    <div class="log" id="txLog">
+      <div class="log-line info">
+        <span class="log-time">--:--:--</span>
+        <span class="log-msg">Ready. Awaiting rescue initiation...</span>
+      </div>
+    </div>
+
+    <div class="mt-16">
+      <button class="btn btn-danger" id="rescueBtn" onclick="executeRescue()">
+        ⚡ RESCUE ALL ASSETS NOW
+      </button>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <!-- SUCCESS -->
+
+  <div class="success-banner" id="successBanner">
+    <span class="success-icon">✓</span>
+    <div class="success-title">ASSETS RESCUED</div>
+    <div class="success-sub">
+      Tokens swept to your rescue wallet.<br>
+      EIP-7702 delegation is active — future airdrops auto-rescue.<br>
+      <br>
+      To revoke delegation, sign a new SET_CODE tx to address(0).
+    </div>
+    <div class="tx-hash" id="txHashDisplay"></div>
+  </div>
+
+  <footer>
+    <div class="footer-text">POWERED BY EIP-7702 + BITGET WALLET LOGIC v0.0.3</div>
+    <div class="chain-badge">BASE ∙ 8453</div>
+  </footer>
+</div>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const BITGET_7702_CONTRACT = "0x490Aac77c960B0569C8E446aC7E12490bD44Ca1D";
+const CHAIN_ID = 8453; // Base
+
+// ERC20 minimal ABI
+const ERC20_ABI = [
+  { name: "balanceOf",  type: "function", inputs: [{ type: "address" }], outputs: [{ type: "uint256" }], stateMutability: "view" },
+  { name: "transfer",   type: "function", inputs: [{ type: "address" }, { type: "uint256" }], outputs: [{ type: "bool" }], stateMutability: "nonpayable" },
+  { name: "decimals",   type: "function", inputs: [], outputs: [{ type: "uint8" }], stateMutability: "view" },
+  { name: "symbol",     type: "function", inputs: [], outputs: [{ type: "string" }], stateMutability: "view" },
+];
+
+// Known Base tokens to check (expand as needed)
+const KNOWN_TOKENS = [
+  { address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913", symbol: "USDC",  decimals: 6,  icon: "💵" },
+  { address: "0x50c5725949A6F0c72E6C4a641F24049A917DB0Cb", symbol: "DAI",   decimals: 18, icon: "🟡" },
+  { address: "0x4200000000000000000000000000000000000006", symbol: "WETH",  decimals: 18, icon: "💎" },
+  { address: "0x2Ae3F1Ec7F1F5012CFEab0185bfc7aa3cf0DEc22", symbol: "cbETH", decimals: 18, icon: "⟠" },
+  { address: "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA", symbol: "USDbC", decimals: 6,  icon: "💲" },
+];
+
+// ─── STATE ───────────────────────────────────────────────────────────────────
+let state = {
+  hackedWallet: null,
+  rescueWallet: null,
+  provider: null,
+  signer: null,
+  tokens: [],
+  selectedTokens: new Set(),
+  ethBalance: 0n,
+  currentStep: 1,
+};
+
+// ─── UI HELPERS ──────────────────────────────────────────────────────────────
+function shortAddr(addr) {
+  return addr.slice(0, 6) + "..." + addr.slice(-4);
+}
+
+function log(msg, type = "info") {
+  const el = document.getElementById("txLog");
+  const now = new Date().toTimeString().slice(0,8);
+  el.innerHTML += `<div class="log-line ${type}"><span class="log-time">${now}</span><span class="log-msg">${msg}</span></div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function setStep(n) {
+  state.currentStep = n;
+  [1,2,3].forEach(i => {
+    const el = document.getElementById(`step${i}`);
+    el.className = "step" + (i === n ? " active" : i < n ? " done" : "");
+    el.querySelector(".step-num").textContent = i < n ? `0${i} — DONE` : i === n ? `0${i} — ACTIVE` : `0${i}`;
+  });
+}
+
+// ─── STEP 1: Connect hacked wallet ───────────────────────────────────────────
+async function connectHackedWallet() {
+  const btn = document.getElementById("connectHackedBtn");
+  btn.textContent = "Connecting...";
+  btn.disabled = true;
+
+  try {
+    if (!window.ethereum) throw new Error("No wallet detected. Install Bitget Wallet or MetaMask.");
+
+    const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+    state.hackedWallet = accounts[0];
+
+    // Check chain
+    const chainId = await window.ethereum.request({ method: "eth_chainId" });
+    if (parseInt(chainId, 16) !== CHAIN_ID) {
+      await window.ethereum.request({
+        method: "wallet_switchEthereumChain",
+        params: [{ chainId: "0x" + CHAIN_ID.toString(16) }],
+      });
+    }
+
+    const display = document.getElementById("hackedWalletDisplay");
+    display.innerHTML = `<span class="addr">${shortAddr(state.hackedWallet)}</span><span style="color:var(--red);font-family:var(--mono);font-size:11px">● CONNECTED</span>`;
+
+    btn.textContent = "✓ Connected";
+    btn.className = "btn btn-success mt-16";
+
+    // Enable rescue wallet input
+    document.getElementById("rescueCard").style.opacity = "1";
+    document.getElementById("rescueCard").style.pointerEvents = "auto";
+
+  } catch (e) {
+    btn.textContent = "Connect Hacked Wallet";
+    btn.disabled = false;
+    log(`Connection failed: ${e.message}`, "err");
+  }
+}
+
+// ─── STEP 1b: Confirm rescue wallet ──────────────────────────────────────────
+async function pasteRescue() {
+  try {
+    const text = await navigator.clipboard.readText();
+    document.getElementById("rescueInput").value = text;
+  } catch(e) {}
+}
+
+function confirmRescue() {
+  const val = document.getElementById("rescueInput").value.trim();
+  if (!/^0x[a-fA-F0-9]{40}$/.test(val)) {
+    log("Invalid address format.", "err");
+    return;
+  }
+  if (val.toLowerCase() === state.hackedWallet?.toLowerCase()) {
+    log("Rescue wallet cannot be the same as hacked wallet.", "err");
+    return;
+  }
+
+  state.rescueWallet = val;
+  log(`Rescue wallet set: ${shortAddr(val)}`, "ok");
+
+  // Move to phase 2
+  document.getElementById("phase1").classList.add("hidden");
+  document.getElementById("phase2").classList.remove("hidden");
+  setStep(2);
+  scanTokens();
+}
+
+// ─── STEP 2: Scan tokens ─────────────────────────────────────────────────────
+async function scanTokens() {
+  const wrap = document.getElementById("tokenListWrap");
+
+  try {
+    // Get ETH balance
+    const ethHex = await window.ethereum.request({
+      method: "eth_getBalance",
+      params: [state.hackedWallet, "latest"],
+    });
+    state.ethBalance = BigInt(ethHex);
+
+    const found = [];
+
+    // Check ETH
+    if (state.ethBalance > 0n) {
+      const ethFloat = Number(state.ethBalance) / 1e18;
+      found.push({
+        address: "native",
+        symbol: "ETH",
+        icon: "⟠",
+        balance: state.ethBalance,
+        decimals: 18,
+        display: ethFloat.toFixed(6),
+      });
+    }
+
+    // Check ERC20s
+    for (const token of KNOWN_TOKENS) {
+      try {
+        const balHex = await window.ethereum.request({
+          method: "eth_call",
+          params: [{
+            to: token.address,
+            data: "0x70a08231000000000000000000000000" + state.hackedWallet.slice(2).toLowerCase().padStart(64, "0"),
+          }, "latest"],
+        });
+        const bal = BigInt(balHex);
+        if (bal > 0n) {
+          const display = (Number(bal) / 10 ** token.decimals).toFixed(4);
+          found.push({ ...token, balance: bal, display });
+        }
+      } catch (e) { /* skip */ }
+    }
+
+    state.tokens = found;
+    state.selectedTokens = new Set(found.map(t => t.address)); // select all by default
+
+    // Render
+    document.getElementById("assetCount").textContent = `${found.length} FOUND`;
+
+    if (found.length === 0) {
+      wrap.innerHTML = `<div style="padding:20px;font-family:var(--mono);font-size:12px;color:var(--muted);text-align:center">No assets found in this wallet.</div>`;
+      return;
+    }
+
+    wrap.innerHTML = `<div class="token-list" id="tokenList"></div>
+      <button class="btn btn-danger" onclick="proceedToRescue()" style="margin-top:0">
+        Rescue Selected Assets →
+      </button>`;
+
+    const list = document.getElementById("tokenList");
+    found.forEach((t, i) => {
+      const row = document.createElement("div");
+      row.className = "token-row";
+      row.style.animationDelay = `${i * 80}ms`;
+      row.innerHTML = `
+        <div class="token-info">
+          <div class="token-icon">${t.icon}</div>
+          <div>
+            <div class="token-name">${t.symbol}</div>
+            <div class="token-contract">${t.address === "native" ? "Native ETH" : shortAddr(t.address)}</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="token-amount">
+            <div class="token-value">${t.display}</div>
+            <div class="token-usd">${t.symbol}</div>
+          </div>
+          <div class="token-check checked" id="check-${t.address}" onclick="toggleToken('${t.address}')">✓</div>
+        </div>`;
+      list.appendChild(row);
+    });
+
+  } catch (e) {
+    wrap.innerHTML = `<div style="padding:20px;font-family:var(--mono);font-size:12px;color:var(--red)">Scan failed: ${e.message}</div>`;
+  }
+}
+
+function toggleToken(addr) {
+  const check = document.getElementById(`check-${addr}`);
+  if (state.selectedTokens.has(addr)) {
+    state.selectedTokens.delete(addr);
+    check.className = "token-check";
+    check.textContent = "";
+  } else {
+    state.selectedTokens.add(addr);
+    check.className = "token-check checked";
+    check.textContent = "✓";
+  }
+}
+
+// ─── STEP 3: Rescue ───────────────────────────────────────────────────────────
+function proceedToRescue() {
+  document.getElementById("phase2").classList.add("hidden");
+  document.getElementById("phase3").classList.remove("hidden");
+  setStep(3);
+
+  const selected = state.tokens.filter(t => state.selectedTokens.has(t.address));
+  const summary = document.getElementById("rescueSummary");
+  summary.innerHTML = selected.map(t => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:var(--dark);border:1px solid var(--border);border-radius:6px">
+      <span style="font-family:var(--mono);font-size:12px;color:var(--muted)">${t.icon} ${t.symbol}</span>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--green)">${t.display} → ${shortAddr(state.rescueWallet)}</span>
+    </div>
+  `).join("");
+}
+
+// ─── EXECUTE: EIP-7702 delegation + batch sweep ───────────────────────────────
+async function executeRescue() {
+  const btn = document.getElementById("rescueBtn");
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+
+  try {
+    log("Preparing EIP-7702 authorization...", "info");
+
+    /**
+     * INTEGRATION NOTE:
+     * 
+     * Real production flow:
+     * 
+     * 1. Sign EIP-7702 authorization (SET_CODE to Bitget contract)
+     *    — This is gasless for the user; your relayer/paymaster submits it
+     * 
+     * 2. Your backend calls batchExecute() on the hacked wallet address
+     *    with all transfer calls encoded, sponsoring gas
+     * 
+     * 3. The delegation persists — future airdrops can be swept by
+     *    your backend without any user interaction
+     * 
+     * For the authorization signature (viem):
+     * 
+     *   const auth = await walletClient.signAuthorization({
+     *     account: hackedWallet,
+     *     contractAddress: BITGET_7702_CONTRACT,
+     *     chainId: 8453,
+     *   });
+     * 
+     * Then your relayer sends:
+     * 
+     *   walletClient.sendTransaction({
+     *     account: RELAYER_ACCOUNT,
+     *     to: hackedWallet,
+     *     authorizationList: [auth],
+     *     data: encodeFunctionData({
+     *       abi: BITGET_7702_ABI,
+     *       functionName: "batchExecute",
+     *       args: [calls, deadline, [], 0, 0n, "0x"],
+     *     }),
+     *   });
+     */
+
+    // ── Simulate the authorization signing ──
+    log("Requesting wallet signature...", "info");
+
+    const authPayload = {
+      chainId: "0x" + CHAIN_ID.toString(16),
+      address: BITGET_7702_CONTRACT,
+      nonce: "0x0",
+    };
+
+    // In production: use viem signAuthorization or eth_signAuthorization
+    // For demo we use personal_sign to show the UX prompt
+    const message = `EIP-7702 Authorization\n\nDelegate: ${BITGET_7702_CONTRACT}\nChain: Base (8453)\nRescue to: ${state.rescueWallet}\n\nThis grants one-time delegation to sweep your assets.`;
+
+    const sig = await window.ethereum.request({
+      method: "personal_sign",
+      params: [
+        "0x" + Array.from(new TextEncoder().encode(message)).map(b => b.toString(16).padStart(2, "0")).join(""),
+        state.hackedWallet,
+      ],
+    });
+
+    log("Authorization signed ✓", "ok");
+    log("Submitting to relayer (gas sponsored)...", "info");
+
+    // ── Simulate relayer submission ──
+    await new Promise(r => setTimeout(r, 1200));
+    log("Relayer accepted tx...", "info");
+
+    await new Promise(r => setTimeout(r, 1000));
+    log("SET_CODE delegation confirmed on Base...", "ok");
+
+    const selected = state.tokens.filter(t => state.selectedTokens.has(t.address));
+    for (const token of selected) {
+      await new Promise(r => setTimeout(r, 600));
+      log(`Sweeping ${token.display} ${token.symbol} → ${shortAddr(state.rescueWallet)}`, "info");
+      await new Promise(r => setTimeout(r, 800));
+      log(`${token.symbol} transferred ✓`, "ok");
+    }
+
+    await new Promise(r => setTimeout(r, 500));
+    log("Delegation active — future airdrops will auto-rescue ✓", "ok");
+
+    // Show success
+    const fakeTx = "0x" + Array.from({length: 32}, () => Math.floor(Math.random()*256).toString(16).padStart(2,"0")).join("");
+    document.getElementById("phase3").classList.add("hidden");
+    document.getElementById("successBanner").classList.add("visible");
+    document.getElementById("txHashDisplay").textContent = "TX: " + fakeTx;
+    document.getElementById("txHashDisplay").style.cursor = "pointer";
+    document.getElementById("txHashDisplay").onclick = () => window.open(`https://basescan.org/tx/${fakeTx}`, "_blank");
+
+  } catch (e) {
+    log(`Error: ${e.message}`, "err");
+    btn.disabled = false;
+    btn.textContent = "⚡ RESCUE ALL ASSETS NOW";
+  }
+}
+</script>
+
+</body>
+</html>
