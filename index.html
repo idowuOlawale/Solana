@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EIP-7702 Signer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+```
+    @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Plus+Jakarta+Sans:wght@500;600;700&display=swap');
+
+    :root {
+        --bg-primary: #0a0e27;
+        --bg-secondary: #141829;
+        --accent-pink: #ff006e;
+        --accent-purple: #8338ec;
+        --accent-cyan: #00d4ff;
+        --success: #00ff88;
+        --text-light: #f5f5f5;
+        --text-muted: #b0b0b0;
+    }
+
+    html, body {
+        width: 100%;
+        height: 100%;
+        background: var(--bg-primary);
+        color: var(--text-light);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        overflow-x: hidden;
+    }
+
+    body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 20px;
+        position: relative;
+    }
+
+    /* Gradient background effect */
+    body::before {
+        content: '';
+        position: fixed;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: 
+            radial-gradient(circle at 20% 80%, rgba(255, 0, 110, 0.15) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(131, 56, 236, 0.15) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: -2;
+        animation: drift 20s ease-in-out infinite;
+    }
+
+    @keyframes drift {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        50% { transform: translate(30px, 30px) rotate(180deg); }
+    }
+
+    .container {
+        width: 100%;
+        max-width: 520px;
+        z-index: 1;
+    }
+
+    .card {
+        background: linear-gradient(135deg, rgba(20, 24, 41, 0.7) 0%, rgba(10, 14, 39, 0.9) 100%);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 0, 110, 0.2);
+        border-radius: 24px;
+        padding: 40px 32px;
+        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .card::before {
+        content: '';
+        position: absolute;
+        top: -1px;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--accent-pink), transparent);
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 36px;
+    }
+
+    .icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-8px); }
+    }
+
+    .header h1 {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-purple) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        letter-spacing: -0.5px;
+    }
+
+    .header p {
+        font-size: 13px;
+        color: var(--text-muted);
+        font-weight: 500;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+
+    .mode-toggle {
+        display: flex;
+        gap: 8px;
+        background: rgba(255, 0, 110, 0.05);
+        padding: 6px;
+        border-radius: 12px;
+        margin-bottom: 28px;
+        border: 1px solid rgba(255, 0, 110, 0.1);
+    }
+
+    .mode-btn {
+        flex: 1;
+        padding: 10px;
+        background: transparent;
+        border: none;
+        color: var(--text-muted);
+        font-family: 'Space Mono', monospace;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .mode-btn.active {
+        background: var(--accent-pink);
+        color: var(--bg-primary);
+        box-shadow: 0 8px 20px rgba(255, 0, 110, 0.3);
+        transform: scale(1.05);
+    }
+
+    .section {
+        margin-bottom: 22px;
+    }
+
+    .label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-muted);
+        margin-bottom: 8px;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+    }
+
+    input, textarea {
+        width: 100%;
+        padding: 12px 14px;
+        background: rgba(20, 24, 41, 0.8);
+        border: 1.5px solid rgba(131, 56, 236, 0.3);
+        border-radius: 10px;
+        color: var(--text-light);
+        font-family: 'Space Mono', monospace;
+        font-size: 12px;
+        transition: all 0.3s ease;
+        resize: vertical;
+    }
+
+    input:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent-pink);
+        background: rgba(20, 24, 41, 0.95);
+        box-shadow: 0 0 0 3px rgba(255, 0, 110, 0.1);
+    }
+
+    textarea {
+        min-height: 90px;
+    }
+
+    .help-text {
+        font-size: 11px;
+        color: var(--text-muted);
+        margin-top: 6px;
+        font-weight: 500;
+    }
+
+    .section-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(131, 56, 236, 0.2), transparent);
+        margin: 24px 0;
+    }
+
+    .button-group {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 28px;
+    }
+
+    button {
+        padding: 12px 16px;
+        border: none;
+        border-radius: 10px;
+        font-size: 12px;
+        font-weight: 700;
+        font-family: 'Space Mono', monospace;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    button::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transform: translateX(-100%);
+        transition: transform 0.6s ease;
+    }
+
+    button:active::before {
+        transform: translateX(100%);
+    }
+
+    .btn-primary {
+        grid-column: span 2;
+        background: linear-gradient(135deg, var(--accent-pink) 0%, var(--accent-purple) 100%);
+        color: white;
+        box-shadow: 0 12px 30px rgba(255, 0, 110, 0.25);
+        font-size: 13px;
+        padding: 14px 16px;
+    }
+
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 16px 40px rgba(255, 0, 110, 0.35);
+    }
+
+    .btn-primary:active {
+        transform: translateY(0);
+    }
+
+    .btn-secondary {
+        background: rgba(131, 56, 236, 0.2);
+        border: 1.5px solid rgba(131, 56, 236, 0.5);
+        color: var(--accent-purple);
+    }
+
+    .btn-secondary:hover {
+        background: rgba(131, 56, 236, 0.3);
+        transform: translateY(-1px);
+    }
+
+    .alert {
+        padding: 12px 14px;
+        border-radius: 10px;
+        font-size: 12px;
+        margin-bottom: 16px;
+        border-left: 3px solid;
+        font-family: 'Space Mono', monospace;
+        animation: slideDown 0.3s ease-out;
+        font-weight: 600;
+    }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .alert.success {
+        background: rgba(0, 255, 136, 0.1);
+        border-color: var(--success);
+        color: var(--success);
+    }
+
+    .alert.error {
+        background: rgba(255, 0, 110, 0.1);
+        border-color: var(--accent-pink);
+        color: var(--accent-pink);
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .result-box {
+        background: rgba(10, 14, 27, 0.8);
+        border: 1.5px solid rgba(131, 56, 236, 0.3);
+        border-radius: 10px;
+        padding: 14px;
+        margin-top: 12px;
+        word-break: break-all;
+        font-family: 'Space Mono', monospace;
+        font-size: 10px;
+        max-height: 200px;
+        overflow-y: auto;
+        color: var(--accent-cyan);
+        line-height: 1.5;
+    }
+
+    @media (max-width: 480px) {
+        .card {
+            padding: 28px 20px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+        }
+
+        .button-group {
+            grid-template-columns: 1fr;
+        }
+
+        .btn-primary {
+            grid-column: span 1;
+        }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--accent-pink);
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-purple);
+    }
+</style>
+```
+
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <div class="icon">⛓️</div>
+                <h1>EIP-7702</h1>
+                <p>Account Abstraction Signer</p>
+            </div>
+
+```
+        <div id="alert-container"></div>
+
+        <!-- Mode Toggle -->
+        <div class="mode-toggle">
+            <button class="mode-btn active" onclick="switchMode('delegate')">→ Delegate</button>
+            <button class="mode-btn" onclick="switchMode('revoke')">✕ Revoke</button>
+        </div>
+
+        <!-- Chain Section -->
+        <div class="section">
+            <label class="label">⚙️ Network Chain ID</label>
+            <input type="number" id="chainId" placeholder="1" value="1">
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Delegation Section -->
+        <div id="delegation-section">
+            <div class="section">
+                <label class="label">👤 Delegatee Address</label>
+                <input type="text" id="delegatee" placeholder="0x..." maxlength="42">
+                <p class="help-text">Address to grant control to</p>
+            </div>
+
+            <div class="section">
+                <label class="label">🛡️ Execution Permissions</label>
+                <textarea id="permissions" placeholder='{"limits": {"daily": "10"}}'></textarea>
+                <p class="help-text">Optional: JSON execution limits</p>
+            </div>
+        </div>
+
+        <!-- Revocation Section -->
+        <div id="revocation-section" class="hidden">
+            <div class="section">
+                <label class="label">🔐 Revoke Delegation</label>
+                <input type="text" id="revokeAddress" placeholder="0x..." maxlength="42">
+                <p class="help-text">Address to revoke delegation from</p>
+            </div>
+        </div>
+
+        <div class="section-divider"></div>
+
+        <!-- Authorizations -->
+        <div class="section">
+            <label class="label">📋 Authorizations (Optional)</label>
+            <textarea id="authorizations" placeholder='[{"chainId": 1, "address": "0x..."}]'></textarea>
+            <p class="help-text">Leave empty for auto-generation</p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="button-group">
+            <button class="btn-secondary" onclick="clearForm()">Clear</button>
+            <button class="btn-secondary" onclick="loadExample()">Example</button>
+            <button class="btn-primary" onclick="signTransaction()">
+                <span id="btn-text">Sign Delegation</span>
+            </button>
+        </div>
+
+        <!-- Result -->
+        <div id="result" class="hidden" style="margin-top: 24px;">
+            <label class="label">✓ Signed Transaction</label>
+            <div class="result-box" id="result-content"></div>
+            <button class="btn-secondary" onclick="copyToClipboard()" style="width: 100%; margin-top: 12px;">📋 Copy to Clipboard</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentMode = 'delegate';
+
+    // Switch mode between delegate and revoke
+    function switchMode(mode) {
+        currentMode = mode;
+        
+        // Update button states
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+        
+        // Show/hide sections
+        if (mode === 'delegate') {
+            document.getElementById('delegation-section').classList.remove('hidden');
+            document.getElementById('revocation-section').classList.add('hidden');
+            document.getElementById('btn-text').textContent = 'Sign Delegation';
+        } else {
+            document.getElementById('delegation-section').classList.add('hidden');
+            document.getElementById('revocation-section').classList.remove('hidden');
+            document.getElementById('btn-text').textContent = 'Sign Revocation';
+        }
+    }
+
+    // Show alert
+    function showAlert(message, type = 'error') {
+        const container = document.getElementById('alert-container');
+        const alert = document.createElement('div');
+        alert.className = `alert ${type}`;
+        alert.textContent = message;
+        container.innerHTML = '';
+        container.appendChild(alert);
+        
+        if (type !== 'error') {
+            setTimeout(() => alert.remove(), 4000);
+        }
+    }
+
+    // Load example
+    function loadExample() {
+        const chainId = '1';
+        document.getElementById('chainId').value = chainId;
+        
+        if (currentMode === 'delegate') {
+            document.getElementById('delegatee').value = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
+            document.getElementById('permissions').value = JSON.stringify({
+                limits: {
+                    daily: "10",
+                    monthly: "100"
+                },
+                allowedFunctions: ["transfer", "swap"]
+            }, null, 2);
+        } else {
+            document.getElementById('revokeAddress').value = '0xabcdefabcdefabcdefabcdefabcdefabcdefabcd';
+        }
+        
+        document.getElementById('authorizations').value = JSON.stringify([{
+            chainId: parseInt(chainId),
+            address: '0x1234567890123456789012345678901234567890',
+            nonce: 0,
+            operations: []
+        }], null, 2);
+        
+        showAlert('✓ Example loaded', 'success');
+    }
+
+    // Clear form
+    function clearForm() {
+        document.getElementById('chainId').value = '1';
+        document.getElementById('delegatee').value = '';
+        document.getElementById('permissions').value = '';
+        document.getElementById('revokeAddress').value = '';
+        document.getElementById('authorizations').value = '';
+        document.getElementById('alert-container').innerHTML = '';
+        document.getElementById('result').classList.add('hidden');
+    }
+
+    // Generate authorization for delegation
+    function generateDelegationAuth(chainId, delegatee, permissions) {
+        return {
+            chainId: chainId,
+            address: delegatee,
+            nonce: 0,
+            operations: [],
+            permissions: permissions || {}
+        };
+    }
+
+    // Generate authorization for revocation
+    function generateRevocationAuth(chainId, delegatedAddress) {
+        return {
+            chainId: chainId,
+            address: delegatedAddress,
+            nonce: 0,
+            operations: [],
+            revoke: true
+        };
+    }
+
+    // Sign transaction
+    async function signTransaction() {
+        try {
+            const chainId = parseInt(document.getElementById('chainId').value);
+            let authString = document.getElementById('authorizations').value.trim();
+            
+            if (currentMode === 'delegate') {
+                const delegatee = document.getElementById('delegatee').value.trim();
+                const permissionsStr = document.getElementById('permissions').value.trim();
+                
+                if (!delegatee.match(/^0x[a-fA-F0-9]{40}$/)) {
+                    throw new Error('Invalid delegatee address format (0x + 40 hex chars)');
+                }
+                
+                let permissions = {};
+                if (permissionsStr) {
+                    try {
+                        permissions = JSON.parse(permissionsStr);
+                    } catch (e) {
+                        throw new Error('Invalid JSON in permissions: ' + e.message);
+                    }
+                }
+                
+                // Auto-generate authorization if not provided
+                if (!authString) {
+                    const auth = generateDelegationAuth(chainId, delegatee, permissions);
+                    authString = JSON.stringify([auth]);
+                }
+                
+                // Build delegation transaction
+                const tx = {
+                    type: '0x04',
+                    chainId: chainId,
+                    operation: 'delegate',
+                    delegatee: delegatee,
+                    permissions: permissions,
+                    authorizations: JSON.parse(authString),
+                    timestamp: new Date().toISOString()
+                };
+                
+                showResult(tx);
+                showAlert('✓ Delegation ready to sign', 'success');
+                
+            } else {
+                const revokeAddress = document.getElementById('revokeAddress').value.trim();
+                
+                if (!revokeAddress.match(/^0x[a-fA-F0-9]{40}$/)) {
+                    throw new Error('Invalid revoke address format (0x + 40 hex chars)');
+                }
+                
+                // Auto-generate authorization if not provided
+                if (!authString) {
+                    const auth = generateRevocationAuth(chainId, revokeAddress);
+                    authString = JSON.stringify([auth]);
+                }
+                
+                // Build revocation transaction
+                const tx = {
+                    type: '0x04',
+                    chainId: chainId,
+                    operation: 'revoke',
+                    revokeAddress: revokeAddress,
+                    authorizations: JSON.parse(authString),
+                    timestamp: new Date().toISOString()
+                };
+                
+                showResult(tx);
+                showAlert('✓ Revocation ready to sign', 'success');
+            }
+
+        } catch (error) {
+            showAlert(error.message, 'error');
+        }
+    }
+
+    // Show result
+    function showResult(tx) {
+        const resultContent = document.getElementById('result-content');
+        resultContent.textContent = JSON.stringify(tx, null, 2);
+        document.getElementById('result').classList.remove('hidden');
+        resultContent.parentElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // Copy to clipboard
+    function copyToClipboard() {
+        const content = document.getElementById('result-content').textContent;
+        navigator.clipboard.writeText(content).then(() => {
+            showAlert('✓ Copied to clipboard!', 'success');
+        }).catch(() => {
+            showAlert('Failed to copy', 'error');
+        });
+    }
+</script>
+```
+
+</body>
+</html>
